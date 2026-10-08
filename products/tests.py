@@ -478,4 +478,81 @@ def test_product_delete(authenticated_client):
     assert not Product.objects.filter(
         id=product.id
     ).exists()
+
+
+@pytest.mark.django_db
+def test_jwt_token_obtain():
+    user = User.objects.create_user(
+        username="jwtuser",
+        password="jwtpassword123",
+    )
+
+    client = APIClient()
+
+    response = client.post(
+        "/api/auth/token/",
+        {
+            "username": "jwtuser",
+            "password": "jwtpassword123",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert "access" in response.data
+    assert "refresh" in response.data
+
+
+@pytest.mark.django_db
+def test_jwt_token_invalid_credentials():
+    User.objects.create_user(
+        username="jwtuser-invalid",
+        password="correctpassword123",
+    )
+
+    client = APIClient()
+
+    response = client.post(
+        "/api/auth/token/",
+        {
+            "username": "jwtuser-invalid",
+            "password": "wrongpassword",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_jwt_token_refresh():
+    User.objects.create_user(
+        username="jwtuser-refresh",
+        password="jwtpassword123",
+    )
+
+    client = APIClient()
+
+    login_response = client.post(
+        "/api/auth/token/",
+        {
+            "username": "jwtuser-refresh",
+            "password": "jwtpassword123",
+        },
+        format="json",
+    )
+
+    assert login_response.status_code == 200
+    assert "refresh" in login_response.data
+
+    refresh_response = client.post(
+        "/api/auth/token/refresh/",
+        {
+            "refresh": login_response.data["refresh"],
+        },
+        format="json",
+    )
+
+    assert refresh_response.status_code == 200
+    assert "access" in refresh_response.data
 # Create your tests here.
