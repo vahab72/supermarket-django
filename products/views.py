@@ -9,11 +9,17 @@ from rest_framework.generics import (
     CreateAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    RetrieveUpdateAPIView,
 )
+from rest_framework.permissions import IsAuthenticated
 
 from .models import Product
 from .permissions import IsAuthenticatedOrReadOnly
-from .serializers import ProductSerializer, RegisterSerializer
+from .serializers import (
+    ProductSerializer,
+    RegisterSerializer,
+    UserProfileSerializer,
+)
 
 
 @extend_schema_view(
@@ -98,3 +104,11 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
 class RegisterAPIView(CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = []
+
+
+class UserProfileAPIView(RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user

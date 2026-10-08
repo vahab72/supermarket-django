@@ -629,4 +629,60 @@ def test_user_registration_duplicate_email():
 
     assert response.status_code == 400
     assert "email" in response.data
+
+
+@pytest.mark.django_db
+def test_user_profile():
+    user = User.objects.create_user(
+        username="profile_user",
+        email="profile@example.com",
+        password="profilepassword123",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    response = client.get("/api/auth/me/")
+
+    assert response.status_code == 200
+    assert response.data["id"] == user.id
+    assert response.data["username"] == "profile_user"
+    assert response.data["email"] == "profile@example.com"
+
+
+@pytest.mark.django_db
+def test_user_profile_without_authentication():
+    client = APIClient()
+
+    response = client.get("/api/auth/me/")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_user_profile_update():
+    user = User.objects.create_user(
+        username="profile_update_user",
+        email="old@example.com",
+        password="profilepassword123",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    response = client.patch(
+        "/api/auth/me/",
+        {
+            "email": "new@example.com",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["email"] == "new@example.com"
+    assert response.data["username"] == "profile_update_user"
+
+    user.refresh_from_db()
+
+    assert user.email == "new@example.com"
 # Create your tests here.

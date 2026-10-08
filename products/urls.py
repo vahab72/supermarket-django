@@ -4,6 +4,7 @@ from .views import (
     ProductDetailAPIView,
     ProductListAPIView,
     RegisterAPIView,
+    UserProfileAPIView,
 )
 
 
@@ -22,5 +23,10 @@ urlpatterns = [
         "auth/register/",
         RegisterAPIView.as_view(),
         name="register",
+    ),
+    path(
+        "auth/me/",
+        UserProfileAPIView.as_view(),
+        name="user-profile",
     ),
 ]
