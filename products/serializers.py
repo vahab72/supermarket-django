@@ -4,6 +4,17 @@ from .models import Product
 
 
 class ProductSerializer(serializers.ModelSerializer):
+
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError(
+                "Price cannot be negative."
+            )
+
+        return value
+
+    
+
     class Meta:
         model = Product
         fields = [
