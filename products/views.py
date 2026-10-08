@@ -52,3 +52,82 @@ class ProductDetailAPIView(APIView):
             serializer.data,
             status=status.HTTP_200_OK,
         )
+
+    def put(self, request, pk):
+        try:
+            product = Product.objects.get(
+                pk=pk,
+                is_active=True,
+            )
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "Product not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = ProductSerializer(
+            product,
+            data=request.data,
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def patch(self, request, pk):
+        try:
+            product = Product.objects.get(
+                pk=pk,
+                is_active=True,
+            )
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "Product not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = ProductSerializer(
+            product,
+            data=request.data,
+            partial=True,
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def delete(self, request, pk):
+        try:
+            product = Product.objects.get(
+                pk=pk,
+                is_active=True,
+            )
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "Product not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        product.delete()
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+        )
