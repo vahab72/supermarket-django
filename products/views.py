@@ -1,3 +1,4 @@
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -9,6 +10,14 @@ from .serializers import ProductSerializer
 
 class ProductListAPIView(ListCreateAPIView):
     serializer_class = ProductSerializer
+    filter_backends = [OrderingFilter]
+    ordering_fields = [
+        "name",
+        "price",
+        "stock",
+        "created_at",
+    ]
+    ordering = ["-created_at"]
 
     def get_queryset(self):
         queryset = Product.objects.filter(is_active=True)
