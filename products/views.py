@@ -7,10 +7,11 @@ from drf_spectacular.utils import (
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
     ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
+    RetrieveUpdateDestroyAPIView
 )
 
 from .models import Product
+from .permissions import IsAuthenticatedOrReadOnly
 from .serializers import ProductSerializer
 
 
@@ -46,6 +47,7 @@ from .serializers import ProductSerializer
 )
 class ProductListAPIView(ListCreateAPIView):
     serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     filter_backends = [OrderingFilter]
 
@@ -86,6 +88,7 @@ class ProductListAPIView(ListCreateAPIView):
 
 class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         return Product.objects.filter(is_active=True)

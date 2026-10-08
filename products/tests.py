@@ -1,9 +1,26 @@
 from decimal import Decimal
 
 import pytest
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 from .models import Category, Product
+
+
+User = get_user_model()
+
+
+@pytest.fixture
+def authenticated_client():
+    user = User.objects.create_user(
+        username="testuser",
+        password="testpassword123",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    return client
 
 
 @pytest.mark.django_db
@@ -70,15 +87,13 @@ def test_product_not_found():
 
 
 @pytest.mark.django_db
-def test_negative_price():
+def test_negative_price(authenticated_client):
     category = Category.objects.create(
         name="لبنیات",
         slug="test-dairy-negative-price",
     )
 
-    client = APIClient()
-
-    response = client.post(
+    response = authenticated_client.post(
         "/api/products/",
         {
             "name": "محصول تست",
@@ -97,7 +112,7 @@ def test_negative_price():
 
 
 @pytest.mark.django_db
-def test_duplicate_slug():
+def test_duplicate_slug(authenticated_client):
     category = Category.objects.create(
         name="لبنیات",
         slug="test-dairy-duplicate",
@@ -113,9 +128,7 @@ def test_duplicate_slug():
         is_active=True,
     )
 
-    client = APIClient()
-
-    response = client.post(
+    response = authenticated_client.post(
         "/api/products/",
         {
             "name": "محصول دوم",
@@ -278,15 +291,39 @@ def test_product_pagination():
 
 
 @pytest.mark.django_db
-def test_product_create():
+def test_product_create_without_authentication():
     category = Category.objects.create(
         name="لبنیات",
-        slug="test-dairy-create",
+        slug="test-dairy-create-unauthenticated",
     )
 
     client = APIClient()
 
     response = client.post(
+        "/api/products/",
+        {
+            "name": "محصول جدید",
+            "slug": "test-new-product-unauthenticated",
+            "description": "محصول جدید",
+            "price": "15000.00",
+            "stock": 20,
+            "is_active": True,
+            "category": category.id,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_product_create(authenticated_client):
+    category = Category.objects.create(
+        name="لبنیات",
+        slug="test-dairy-create",
+    )
+
+    response = authenticated_client.post(
         "/api/products/",
         {
             "name": "محصول جدید",
@@ -310,7 +347,7 @@ def test_product_create():
 
 
 @pytest.mark.django_db
-def test_product_update():
+def test_product_update(authenticated_client):
     category = Category.objects.create(
         name="لبنیات",
         slug="test-dairy-update",
@@ -326,9 +363,7 @@ def test_product_update():
         is_active=True,
     )
 
-    client = APIClient()
-
-    response = client.put(
+    response = authenticated_client.put(
         f"/api/products/{product.id}/",
         {
             "name": "محصول ویرایش شده",
@@ -355,7 +390,7 @@ def test_product_update():
 
 
 @pytest.mark.django_db
-def test_product_partial_update():
+def test_product_partial_update(authenticated_client):
     category = Category.objects.create(
         name="لبنیات",
         slug="test-dairy-patch",
@@ -371,9 +406,7 @@ def test_product_partial_update():
         is_active=True,
     )
 
-    client = APIClient()
-
-    response = client.patch(
+    response = authenticated_client.patch(
         f"/api/products/{product.id}/",
         {
             "price": "25000.00",
@@ -391,7 +424,36 @@ def test_product_partial_update():
 
 
 @pytest.mark.django_db
-def test_product_delete():
+def test_product_delete_without_authentication():
+    category = Category.objects.create(
+        name="لبنیات",
+        slug="test-dairy-delete-unauthenticated",
+    )
+
+    product = Product.objects.create(
+        category=category,
+        name="محصول قابل حذف",
+        slug="test-delete-product-unauthenticated",
+        description="محصول قابل حذف",
+        price="10000.00",
+        stock=10,
+        is_active=True,
+    )
+
+    client = APIClient()
+
+    response = client.delete(
+        f"/api/products/{product.id}/"
+    )
+
+    assert response.status_code == 401
+    assert Product.objects.filter(
+        id=product.id
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_product_delete(authenticated_client):
     category = Category.objects.create(
         name="لبنیات",
         slug="test-dairy-delete",
@@ -407,9 +469,7 @@ def test_product_delete():
         is_active=True,
     )
 
-    client = APIClient()
-
-    response = client.delete(
+    response = authenticated_client.delete(
         f"/api/products/{product.id}/"
     )
 
