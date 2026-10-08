@@ -6,13 +6,14 @@ from drf_spectacular.utils import (
 )
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
+    CreateAPIView,
     ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView
+    RetrieveUpdateDestroyAPIView,
 )
 
 from .models import Product
 from .permissions import IsAuthenticatedOrReadOnly
-from .serializers import ProductSerializer
+from .serializers import ProductSerializer, RegisterSerializer
 
 
 @extend_schema_view(
@@ -92,3 +93,8 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Product.objects.filter(is_active=True)
+
+
+class RegisterAPIView(CreateAPIView):
+    serializer_class = RegisterSerializer
+    permission_classes = []
