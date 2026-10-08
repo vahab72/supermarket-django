@@ -1,3 +1,9 @@
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiTypes,
+    extend_schema,
+    extend_schema_view,
+)
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
     ListCreateAPIView,
@@ -8,15 +14,48 @@ from .models import Product
 from .serializers import ProductSerializer
 
 
+@extend_schema_view(
+    get=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="category",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter products by category ID.",
+            ),
+            OpenApiParameter(
+                name="search",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Search products by name.",
+            ),
+            OpenApiParameter(
+                name="min_price",
+                type=OpenApiTypes.NUMBER,
+                location=OpenApiParameter.QUERY,
+                description="Filter products with a minimum price.",
+            ),
+            OpenApiParameter(
+                name="max_price",
+                type=OpenApiTypes.NUMBER,
+                location=OpenApiParameter.QUERY,
+                description="Filter products with a maximum price.",
+            ),
+        ]
+    )
+)
 class ProductListAPIView(ListCreateAPIView):
     serializer_class = ProductSerializer
+
     filter_backends = [OrderingFilter]
+
     ordering_fields = [
         "name",
         "price",
         "stock",
         "created_at",
     ]
+
     ordering = ["-created_at"]
 
     def get_queryset(self):
