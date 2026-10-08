@@ -16,4 +16,25 @@ class ProductListAPIView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
+class ProductDetailAPIView(APIView):
+    def get(self, request, pk):
+        try:
+            product = Product.objects.get(
+                pk=pk,
+                is_active=True,
+            )
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "Product not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = ProductSerializer(product)
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
 # Create your views here.
