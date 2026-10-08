@@ -555,4 +555,78 @@ def test_jwt_token_refresh():
 
     assert refresh_response.status_code == 200
     assert "access" in refresh_response.data
+
+
+@pytest.mark.django_db
+def test_user_registration():
+    client = APIClient()
+
+    response = client.post(
+        "/api/auth/register/",
+        {
+            "username": "registration_user",
+            "email": "registration@example.com",
+            "password": "registration123",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.data["username"] == "registration_user"
+    assert response.data["email"] == "registration@example.com"
+    assert "password" not in response.data
+
+    user = User.objects.get(
+        username="registration_user"
+    )
+
+    assert user.email == "registration@example.com"
+    assert user.check_password("registration123")
+
+
+@pytest.mark.django_db
+def test_user_registration_duplicate_username():
+    User.objects.create_user(
+        username="existing_user",
+        password="existingpassword123",
+    )
+
+    client = APIClient()
+
+    response = client.post(
+        "/api/auth/register/",
+        {
+            "username": "existing_user",
+            "email": "new@example.com",
+            "password": "newpassword123",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "username" in response.data
+
+
+@pytest.mark.django_db
+def test_user_registration_duplicate_email():
+    User.objects.create_user(
+        username="email_user",
+        email="existing@example.com",
+        password="existingpassword123",
+    )
+
+    client = APIClient()
+
+    response = client.post(
+        "/api/auth/register/",
+        {
+            "username": "new_email_user",
+            "email": "existing@example.com",
+            "password": "newpassword123",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "email" in response.data
 # Create your tests here.
